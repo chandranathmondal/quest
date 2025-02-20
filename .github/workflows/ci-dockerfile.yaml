@@ -23,10 +23,20 @@ jobs:
 
       - if: github.event.release.published == true
         name: Set image tag based on release tag
-        run: echo "IMAGE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+        run: echo "IMAGE_TAG=${{ vars.DOCKERHUB_REPOSITORY }}:${{ github.ref_name }}" >> $GITHUB_ENV
 
       - if: github.event.release.published == false
         name: Set image tag based on commit SHA
-        run: echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        run: echo "IMAGE_TAG=${{ vars.DOCKERHUB_REPOSITORY }}:$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - run: echo ${{ env.IMAGE_TAG }}
+      - run: docker build -t ${{ env.IMAGE_TAG }} .
+
+      - run: docker run --rm ${{ env.IMAGE_TAG }} sh -c "cat /etc/os-release | grep ^VERSION"
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - run: docker push ${{ env.IMAGE_TAG }}
+      
