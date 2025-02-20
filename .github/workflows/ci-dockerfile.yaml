@@ -22,6 +22,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set image tag
-        run: echo "IMAGE_TAG=${{ github.event.release.published == true && github.ref_name || $(git rev-parse --short HEAD)}}" >> "${GITHUB_ENV}"
+        run: echo "IMAGE_TAG=$(${{ github.event.release.published == true && github.ref_name || $(git rev-parse --short HEAD)}})" >> "${GITHUB_ENV}"
 
       - run: echo ${{ env.IMAGE_TAG }}
