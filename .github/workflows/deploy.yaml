@@ -1,0 +1,65 @@
+---
+name: Deploy
+on: 
+  workflow_dispatch:
+  push: # To be removed after merging to main
+
+jobs:
+  terraform-apply:
+    name: Terraform apply
+    runs-on: ubuntu-latest
+    
+    steps:
+
+    - uses: actions/checkout@v3 
+
+    - name: Configure AWS Credentials
+      run: |
+        echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+        echo "AWS_DEFAULT_REGION=${{ vars.AWS_DEFAULT_REGION }}" >> $GITHUB_ENV
+
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.10.5"
+
+    - name: Terraform init
+      working-directory: terraform
+      run: |
+        terraform init -input=false \
+          -backend-config="backend.tfvars" \
+          -backend-config="region=${{ vars.AWS_DEFAULT_REGION }}"
+
+    - name: Get last plan workflow run ID
+      id: get-last-plan-workflow-run-id
+      uses: actions/github-script@v7
+      with: 
+        result-encoding: string
+        script: |
+          const response = await github.rest.actions.listWorkflowRuns({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: "plan.yaml"
+          })
+
+          const run = await response.data.workflow_runs.find((run) => run.head_branch === "${{ github.ref_name }}")
+
+          if (!run) throw new Error("No runs found for plan workflow!")
+          
+          return run.id
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: tf-plan
+        run-id: ${{ steps.get-last-plan-workflow-run-id.outputs.result }}
+        path: terraform
+        github-token: ${{ github.token }}
+
+    - name: Terraform apply
+      working-directory: terraform
+      run: terraform apply -auto-approve tf.plan
+
+    - name: Output Service URL
+      id: output
+      working-directory: terraform
+      run: echo "::notice App Runner Service URL (https://$(terraform output -raw service_url))[https://$(terraform output -raw service_url]" >> $GITHUB_STEP_SUMMARY
