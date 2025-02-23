@@ -1,0 +1,54 @@
+---
+name: Plan
+on: 
+  workflow_dispatch:
+  push: # To be removed after merging to main
+
+jobs:
+  terraform-plan:
+    name: Terraform plan
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      run: |
+        echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+        echo "AWS_DEFAULT_REGION=${{ vars.AWS_DEFAULT_REGION }}" >> $GITHUB_ENV
+
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.10.5"
+
+    - name: Terraform init
+      working-directory: terraform
+      run: |
+        terraform init -input=false \
+          -backend-config="backend.tfvars" \
+          -backend-config="region=${{ vars.AWS_DEFAULT_REGION }}"
+
+    - if: github.event.release.published == true
+      name: Set image tag based on release tag
+      run: echo "IMAGE_TAG=${{ vars.DOCKERHUB_REPOSITORY }}:${{ github.ref_name }}" >> $GITHUB_ENV
+
+    - if: github.event.release.published == false
+      name: Set image tag based on commit SHA
+      run: echo "IMAGE_TAG=${{ vars.DOCKERHUB_REPOSITORY }}:$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+    - name: Terraform plan
+      working-directory: terraform
+      run: |
+        terraform plan -input=false \
+            -var region=${{ vars.AWS_REGION }} \
+            -var branch=$GITHUB_REF_NAME \
+            -var image_tag=${{ env.IMAGE_TAG }} \
+            -var-file=env.tfvars \
+            -out=tf.plan
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: tf-plan
+        path: terraform/tf.plan
