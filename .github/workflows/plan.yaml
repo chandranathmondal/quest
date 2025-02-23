@@ -28,7 +28,7 @@ jobs:
       run: |
         terraform init -input=false \
           -backend-config="backend.tfvars" \
-          -backend-config="region=${{ vars.AWS_REGION }}"
+          -backend-config="region=${{ vars.AWS_DEFAULT_REGION }}"
 
     - name: Terraform plan
       working-directory: terraform
