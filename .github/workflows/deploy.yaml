@@ -59,7 +59,8 @@ jobs:
       working-directory: terraform
       run: terraform apply -auto-approve tf.plan
 
-    - name: Output Service URL
-      id: output
+    - name: Output Service URLs
       working-directory: terraform
-      run: echo "App Runner Service URL [https://$(terraform output -raw service_url)](https://$(terraform output -raw service_url))" >> $GITHUB_STEP_SUMMARY
+      run: |
+        echo "App Runner Service URL [https://$(terraform output -raw app_runner_service_url)](https://$(terraform output -raw app_runner_service_url))" >> $GITHUB_STEP_SUMMARY
+        echo "LightSail Container Service URL [https://$(terraform output -raw lightsail_container_service_url)](https://$(terraform output -raw lightsail_container_service_url))" >> $GITHUB_STEP_SUMMARY
