@@ -30,12 +30,21 @@ jobs:
           -backend-config="backend.tfvars" \
           -backend-config="region=${{ vars.AWS_DEFAULT_REGION }}"
 
+    - if: github.event.release.published == true
+      name: Set image tag based on release tag
+      run: echo "IMAGE_TAG=${{ vars.DOCKERHUB_REPOSITORY }}:${{ github.ref_name }}" >> $GITHUB_ENV
+
+    - if: github.event.release.published == false
+      name: Set image tag based on commit SHA
+      run: echo "IMAGE_TAG=${{ vars.DOCKERHUB_REPOSITORY }}:$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
     - name: Terraform plan
       working-directory: terraform
       run: |
         terraform plan -input=false \
             -var region=${{ vars.AWS_REGION }} \
             -var branch=$GITHUB_REF_NAME \
+            -var iimage_tag=${{ env.IMAGE_TAG }} \
             -var-file=env.tfvars \
             -out=tf.plan
 
