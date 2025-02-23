@@ -12,7 +12,7 @@ resource "aws_lightsail_container_service" "rearc-quest" {
 resource "aws_lightsail_container_service_deployment_version" "rearc-quest" {
   container {
     container_name = "rearc-quest"
-    image          = "chandranathmonda/rearc-quest:${ var.image_tag }"
+    image          = var.image_tag
 
     command = []
 
