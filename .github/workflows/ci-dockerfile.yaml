@@ -1,12 +1,13 @@
 ---
 name: CI Dockerfile
 on:
-  pull_request:
-    types:
-      - opened
-      - reopened
-      - ready_for_review
-      - synchronize
+  push:
+  # pull_request:
+  #   types:
+  #     - opened
+  #     - reopened
+  #     - ready_for_review
+  #     - synchronize
 
   release:
     types: [published]
