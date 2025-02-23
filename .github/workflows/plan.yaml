@@ -44,7 +44,7 @@ jobs:
         terraform plan -input=false \
             -var region=${{ vars.AWS_REGION }} \
             -var branch=$GITHUB_REF_NAME \
-            -var iimage_tag=${{ env.IMAGE_TAG }} \
+            -var image_tag=${{ env.IMAGE_TAG }} \
             -var-file=env.tfvars \
             -out=tf.plan
 
