@@ -9,3 +9,7 @@ variable "branch" {
 variable "env_vars" {
   type = map(string)
 }
+
+variable "image_tag" {
+  type = string
+}
