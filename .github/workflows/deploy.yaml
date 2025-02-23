@@ -62,4 +62,4 @@ jobs:
     - name: Output Service URL
       id: output
       working-directory: terraform
-      run: echo "::notice App Runner Service URL (https://$(terraform output -raw service_url))[https://$(terraform output -raw service_url]" >> $GITHUB_STEP_SUMMARY
+      run: echo "::notice App Runner Service URL (https:://$(terraform output -raw service_url))[https:://$(terraform output -raw service_url]" >> $GITHUB_STEP_SUMMARY
