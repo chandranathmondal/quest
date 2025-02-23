@@ -1,0 +1,45 @@
+---
+name: Plan
+on: 
+  workflow_dispatch:
+  push: # To be removed after merging to main
+
+jobs:
+  terraform-plan:
+    name: Terraform plan
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      run: |
+        export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+        export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        export AWS_DEFAULT_REGION=${{ vars.AWS_DEFAULT_REGION }}
+
+    - uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.10.5"
+
+    - name: Terraform init
+      working-directory: terraform
+      run: |
+        terraform init -input=false \
+          -backend-config="backend.tfvars" \
+          -backend-config="region=${{ vars.AWS_REGION }}"
+
+    - name: Terraform plan
+      working-directory: terraform
+      run: |
+        terraform plan -input=false \
+            -var region=${{ vars.AWS_REGION }} \
+            -var branch=$GITHUB_REF_NAME \
+            -var-file=env.tfvars \
+            -out=tf.plan
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: tf-plan
+        path: terraform/tf.plan
